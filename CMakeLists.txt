@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-# Toolchain File for FRC
-include(CMakeForceCompiler)
-
-#is there a cmake variable for nm?
-set(NM_PROGRAM powerpc-wrs-vxworks-nm)
+# Toolchain File for VxWorks
 
 #information needed by cmake:
 set(CMAKE_SYSTEM_NAME vxWorks)
@@ -11,13 +7,14 @@ set(CMAKE_SYSTEM_VERSION 6) #TODO: get real version number
 set(CMAKE_SYSTEM_PROCESSOR PPC)
 
 #system wide settings
+include(CMakeForceCompiler)
+
 set(TOOLCHAIN_PREFIX "/usr/local/powerpc-wrs-vxworks")
 set(WIND_BASE "${TOOLCHAIN_PREFIX}/wind_base")
 set(DEPLOYIP 10.6.12.2)
 
 set(VXWORKS_USE_SOFT_FLOAT false)
 
-#set compiler
 CMAKE_FORCE_C_COMPILER(powerpc-wrs-vxworks-gcc GNU)
 set(NM_EXECUTABLE powerpc-wrs-vxworks-nm)
 set(CMAKE_FIND_ROOT_PATH "${TOOLCHAIN_PREFIX}")
@@ -33,6 +30,7 @@ set(CMAKE_LIBRARY_PATH_FLAG -L)
 
 # (embedded) targets without operating system usually don't support shared libraries
 SET_PROPERTY(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
+# is this true?  We can add a dependency on another kernel module
 
 # To help the find_xxx() commands, set at least the following so CMAKE_FIND_ROOT_PATH
 # works at least for some simple cases:
@@ -61,43 +59,50 @@ endif()
 
 #Add a VxWorks Downloadable Kernel Module Target
 macro(add_vxworks_dkm TGTNAME SOURCES INCLUDES LIBS)
-	#TODO: Set these CFLAGS better...
+	#Set CFLAGS, LDFLAGS
+	set(VXWORKS_DKM_COMPILE_FLAGS " ${ARCH_SPEC} -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
+	set(VXWORKS_DKM_LINK_FLAGS " -r -nostdlib -Wl,-X") #should be equivalent to -nostdlib -Wl,-X,-r but I don't want to mess...
+
+	#Compile and link in all static libraries
 	add_executable(${TGTNAME}_PartialImage ${SOURCES})
 	set_target_properties(${TGTNAME}_PartialImage PROPERTIES SUFFIX .o)
+	set_target_properties(${TGTNAME}_PartialImage PROPERTIES COMPILE_FLAGS "${VXWORKS_DKM_COMPILE_FLAGS}")
+	set_target_properties(${TGTNAME}_PartialImage PROPERTIES LINK_FLAGS "${VXWORKS_DKM_LINK_FLAGS}")
 	target_link_libraries(${TGTNAME}_PartialImage ${LIBS})
 	include_directories(${INCLUDES})
-	#add circular dependency on purpose to tell CMake to shut up that it doesn't know where FRC_PartialImage.o come from. Bug?
+
+	#add circular dependency on purpose to tell CMake to shut up that it doesn't know where ${TGTNAME}_PartialImage.o comes from. Bug?
 	add_custom_command(
 		OUTPUT ${TGTNAME}_PartialImage.o
 		COMMAND echo #reasonably cross platform noop
 		DEPENDS ${TGTNAME}_PartialImage
 	)
+
+	#VxWorks DKMs have no code to load static constructors/destructors for C++, so the next creates symbol tables that the kernel
+	#can read and execute the static ctors/dtors at load time (AFAIK).  This needs to be done AFTER static libraries are linked
+	#in as these libraries may also contain static ctors/dtors that need to be loaded as well.
 	add_custom_command(
 		OUTPUT ctdt.c
-		COMMAND ${NM_EXECUTABLE} ${TGTNAME}_PartialImage.o | tclsh ${WIND_BASE}/host/resource/hutils/tcl/munch.tcl -c ppc > ctdt.c
+		COMMAND ${NM_EXECUTABLE} ${TGTNAME}_PartialImage.o | tclsh "${WIND_BASE}/host/resource/hutils/tcl/munch.tcl" -c ppc > ctdt.c
 		DEPENDS ${TGTNAME}_PartialImage.o
 	)
+
+	#Add an executable with both the original object code and the descriptor tables
 	add_executable(${TGTNAME} ctdt.c ${TGTNAME}_PartialImage.o)
 	set_target_properties(${TGTNAME} PROPERTIES SUFFIX .out)
-	set_target_properties(${TGTNAME} PROPERTIES LINK_FLAGS "-T ${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
-	set_target_properties(${TGTNAME} PROPERTIES COMPILE_FLAGS "-nostdlib")
+	set_target_properties(${TGTNAME} PROPERTIES COMPILE_FLAGS "${VXWORKS_DKM_COMPILE_FLAGS}")
+	#use the link script provided
+	set_target_properties(${TGTNAME} PROPERTIES LINK_FLAGS "${VXWORKS_DKM_LINK_FLAGS} -T ${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
 
-	#Set CFLAGS
+	#install
+	if(${UNIX} OR ${MSYS})
+		install(CODE "execute_process(COMMAND \"${TOOLCHAIN_PREFIX}/deploy.sh\" \"${CMAKE_BINARY_DIR}/${TGTNAME}.out\" ${DEPLOYIP})")
+	else()
+		install(CODE "execute_process(COMMAND \"${TOOLCHAIN_PREFIX}\\deploy.bat\" \"${CMAKE_BINARY_DIR}\\${TGTNAME}.out\" ${DEPLOYIP})")
+	endif()
+endmacro()
 
-	set(CMAKE_C_FLAGS " ${ARCH_SPEC} -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
-	set(CMAKE_CXX_FLAGS " ${ARCH_SPEC} -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
-	set(CMAKE_EXE_LINKER_FLAGS " -r -nostdlib -Wl,-X -T ${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
-
-	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g")
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")
-	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} -g")
-	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O2 -fstrength-reduce -fno-builtin")
-	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2 -fstrength-reduce -fno-builtin")
-	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} -O2 -fstrength-reduce -fno-builtin")
-
-endmacro(ADD_FRC)
-
-#project specific
+#project specific EXAMPLE
 project(FRC)
 set(FRC_SOURCES main.cpp)
 set(FRC_INCLUDES ${WPILIB_INCLUDE_DIR})
