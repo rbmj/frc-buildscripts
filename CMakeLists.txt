@@ -10,6 +10,7 @@ set(CMAKE_SYSTEM_PROCESSOR PPC)
 include(CMakeForceCompiler)
 
 set(TOOLCHAIN_PREFIX "/usr/local/powerpc-wrs-vxworks")
+set(TOOLCHAIN_IS_GCCDIST false)
 set(WIND_BASE "${TOOLCHAIN_PREFIX}/wind_base")
 set(DEPLOYIP 10.6.12.2)
 
@@ -45,7 +46,11 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 #config
-set(SYSTEM_INCLUDES " -I${WIND_BASE}/target/h -I${WIND_BASE}/target/h/wrn/coreip")
+if(${TOOLCHAIN_IS_GCCDIST})
+	set(SYSTEM_INCLUDES " -I${WIND_BASE}/target/h -I${WIND_BASE}/target/h/wrn/coreip")
+else()
+	set(SYSTEM_INCLUDES "")
+endif()
 set(WPILIB_LIBRARY "${WIND_BASE}/vxworks-6.3/target/lib/WPILib.a")
 set(WPILIB_INCLUDE_DIR "${WIND_BASE}/vxworks-6.3/target/h/WPILib")
 set(CPU PPC603)
@@ -57,16 +62,24 @@ if (${VXWORKS_USE_SOFT_FLOAT})
 	set(ARCH_SPEC "${ARCH_SPEC} -msoft_float")
 endif()
 
+#Set CFLAGS, LDFLAGS
+set(VXWORKS_COMPILE_FLAGS " ${ARCH_SPEC} -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
+set(VXWORKS_DKM_LINK_FLAGS " -r -nostdlib -Wl,-X") #should be equivalent to -nostdlib -Wl,-X,-r but I don't want to mess...
+
+macro(add_vxworks_library TGTNAME SOURCES INCLUDES LIBS)
+	add_library(${TGTNAME} STATIC)
+	set_target_properties(${TGTNAME} PROPERTIES COMPILE_FLAGS "${VXWORKS_COMPILE_FLAGS}")
+	target_link_libraries(${TGTNAME} ${LIBS})
+	include_directories(${INCLUDES})
+	#TODO: Install
+endif()
+
 #Add a VxWorks Downloadable Kernel Module Target
 macro(add_vxworks_dkm TGTNAME SOURCES INCLUDES LIBS)
-	#Set CFLAGS, LDFLAGS
-	set(VXWORKS_DKM_COMPILE_FLAGS " ${ARCH_SPEC} -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
-	set(VXWORKS_DKM_LINK_FLAGS " -r -nostdlib -Wl,-X") #should be equivalent to -nostdlib -Wl,-X,-r but I don't want to mess...
-
 	#Compile and link in all static libraries
 	add_executable(${TGTNAME}_PartialImage ${SOURCES})
 	set_target_properties(${TGTNAME}_PartialImage PROPERTIES SUFFIX .o)
-	set_target_properties(${TGTNAME}_PartialImage PROPERTIES COMPILE_FLAGS "${VXWORKS_DKM_COMPILE_FLAGS}")
+	set_target_properties(${TGTNAME}_PartialImage PROPERTIES COMPILE_FLAGS "${VXWORKS_COMPILE_FLAGS}")
 	set_target_properties(${TGTNAME}_PartialImage PROPERTIES LINK_FLAGS "${VXWORKS_DKM_LINK_FLAGS}")
 	target_link_libraries(${TGTNAME}_PartialImage ${LIBS})
 	include_directories(${INCLUDES})
@@ -90,7 +103,7 @@ macro(add_vxworks_dkm TGTNAME SOURCES INCLUDES LIBS)
 	#Add an executable with both the original object code and the descriptor tables
 	add_executable(${TGTNAME} ctdt.c ${TGTNAME}_PartialImage.o)
 	set_target_properties(${TGTNAME} PROPERTIES SUFFIX .out)
-	set_target_properties(${TGTNAME} PROPERTIES COMPILE_FLAGS "${VXWORKS_DKM_COMPILE_FLAGS}")
+	set_target_properties(${TGTNAME} PROPERTIES COMPILE_FLAGS "${VXWORKS_COMPILE_FLAGS}")
 	#use the link script provided
 	set_target_properties(${TGTNAME} PROPERTIES LINK_FLAGS "${VXWORKS_DKM_LINK_FLAGS} -T ${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
 
