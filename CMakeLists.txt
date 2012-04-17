@@ -10,6 +10,7 @@ set(CMAKE_SYSTEM_PROCESSOR PPC)
 include(CMakeForceCompiler)
 
 set(TOOLCHAIN_PREFIX "/usr/local/powerpc-wrs-vxworks")
+set(CMAKE_INSTALL_PREFIX ${TOOLCHAIN_PREFIX})
 set(TOOLCHAIN_IS_GCCDIST false)
 set(WIND_BASE "${TOOLCHAIN_PREFIX}/wind_base")
 set(DEPLOYIP 10.6.12.2)
@@ -18,20 +19,19 @@ set(VXWORKS_USE_SOFT_FLOAT false)
 
 CMAKE_FORCE_C_COMPILER(powerpc-wrs-vxworks-gcc GNU)
 set(NM_EXECUTABLE powerpc-wrs-vxworks-nm)
+set(OBJCOPY_EXECUTABLE powerpc-wrs-vxworks-objcopy)
 set(CMAKE_FIND_ROOT_PATH "${TOOLCHAIN_PREFIX}")
 
-#set necessary internal cmake flags
-set(CMAKE_C_COMPILE_OBJECT "<CMAKE_C_COMPILER> <DEFINES> <SOURCE> -o <OBJECT> <FLAGS>")
-set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <SOURCE> -o <OBJECT> <FLAGS>")
-set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>" "<CMAKE_RANLIB> <TARGET>")
-set(CMAKE_CXX_CREATE_STATIC_LIBRARY "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>" "<CMAKE_RANLIB> <TARGET>")
-set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS>  -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER>  <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_LIBRARY_PATH_FLAG -L)
+set(VXWORKS_LIBSTDCXX "${TOOLCHAIN_PREFIX}/lib/libstdc++.a")
+set(VXWORKS_LIBSUPCXX "${TOOLCHAIN_PREFIX}/lib/libsupc++.a")
+#TODO: Do we want libsupc++.a?
+
+set(WPILIB_LIBRARY "${TOOLCHAIN_PREFIX}/lib/libWPILib.a")
+set(WPILIB_INCLUDE_DIR "${TOOLCHAIN_PREFIX}/include/WPILib")
 
 # (embedded) targets without operating system usually don't support shared libraries
 SET_PROPERTY(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
-# is this true?  We can add a dependency on another kernel module
+# is this true?  We can add a dependency on another kernel module, but it's crufty
 
 # To help the find_xxx() commands, set at least the following so CMAKE_FIND_ROOT_PATH
 # works at least for some simple cases:
@@ -51,8 +51,6 @@ if(${TOOLCHAIN_IS_GCCDIST})
 else()
 	set(SYSTEM_INCLUDES "")
 endif()
-set(WPILIB_LIBRARY "${WIND_BASE}/vxworks-6.3/target/lib/WPILib.a")
-set(WPILIB_INCLUDE_DIR "${WIND_BASE}/vxworks-6.3/target/h/WPILib")
 set(CPU PPC603)
 set(TOOL_FAMILY gnu)
 set(TOOL gnu)
@@ -63,63 +61,34 @@ if (${VXWORKS_USE_SOFT_FLOAT})
 endif()
 
 #Set CFLAGS, LDFLAGS
-set(VXWORKS_COMPILE_FLAGS " ${ARCH_SPEC} -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
-set(VXWORKS_DKM_LINK_FLAGS " -r -nostdlib -Wl,-X") #should be equivalent to -nostdlib -Wl,-X,-r but I don't want to mess...
+#Note that we use -nostdlib and then link with the standard library
+set(VXWORKS_COMPILE_FLAGS " ${ARCH_SPEC} -nostdlib -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
+set(VXWORKS_DKM_LINK_FLAGS " -nostdlib -r -Wl,-X -static") #should be equivalent to -nostdlib -Wl,-X,-r -static but I don't want to mess...
+set(VXWORKS_DKM_LINK_SCRIPT_FLAG "-T ${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
 
-macro(add_vxworks_library TGTNAME SOURCES INCLUDES LIBS)
-	add_library(${TGTNAME} STATIC)
-	set_target_properties(${TGTNAME} PROPERTIES COMPILE_FLAGS "${VXWORKS_COMPILE_FLAGS}")
-	target_link_libraries(${TGTNAME} ${LIBS})
-	include_directories(${INCLUDES})
-	#TODO: Install
-endif()
-
-#Add a VxWorks Downloadable Kernel Module Target
-macro(add_vxworks_dkm TGTNAME SOURCES INCLUDES LIBS)
-	#Compile and link in all static libraries
-	add_executable(${TGTNAME}_PartialImage ${SOURCES})
-	set_target_properties(${TGTNAME}_PartialImage PROPERTIES SUFFIX .o)
-	set_target_properties(${TGTNAME}_PartialImage PROPERTIES COMPILE_FLAGS "${VXWORKS_COMPILE_FLAGS}")
-	set_target_properties(${TGTNAME}_PartialImage PROPERTIES LINK_FLAGS "${VXWORKS_DKM_LINK_FLAGS}")
-	target_link_libraries(${TGTNAME}_PartialImage ${LIBS})
-	include_directories(${INCLUDES})
-
-	#add circular dependency on purpose to tell CMake to shut up that it doesn't know where ${TGTNAME}_PartialImage.o comes from. Bug?
-	add_custom_command(
-		OUTPUT ${TGTNAME}_PartialImage.o
-		COMMAND echo #reasonably cross platform noop
-		DEPENDS ${TGTNAME}_PartialImage
-	)
-
-	#VxWorks DKMs have no code to load static constructors/destructors for C++, so the next creates symbol tables that the kernel
-	#can read and execute the static ctors/dtors at load time (AFAIK).  This needs to be done AFTER static libraries are linked
-	#in as these libraries may also contain static ctors/dtors that need to be loaded as well.
-	add_custom_command(
-		OUTPUT ctdt.c
-		COMMAND ${NM_EXECUTABLE} ${TGTNAME}_PartialImage.o | tclsh "${WIND_BASE}/host/resource/hutils/tcl/munch.tcl" -c ppc > ctdt.c
-		DEPENDS ${TGTNAME}_PartialImage.o
-	)
-
-	#Add an executable with both the original object code and the descriptor tables
-	add_executable(${TGTNAME} ctdt.c ${TGTNAME}_PartialImage.o)
-	set_target_properties(${TGTNAME} PROPERTIES SUFFIX .out)
-	set_target_properties(${TGTNAME} PROPERTIES COMPILE_FLAGS "${VXWORKS_COMPILE_FLAGS}")
-	#use the link script provided
-	set_target_properties(${TGTNAME} PROPERTIES LINK_FLAGS "${VXWORKS_DKM_LINK_FLAGS} -T ${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
-
-	#install
-	if(${UNIX} OR ${MSYS})
-		install(CODE "execute_process(COMMAND \"${TOOLCHAIN_PREFIX}/deploy.sh\" \"${CMAKE_BINARY_DIR}/${TGTNAME}.out\" ${DEPLOYIP})")
-	else()
-		install(CODE "execute_process(COMMAND \"${TOOLCHAIN_PREFIX}\\deploy.bat\" \"${CMAKE_BINARY_DIR}\\${TGTNAME}.out\" ${DEPLOYIP})")
-	endif()
-endmacro()
-
-#project specific EXAMPLE
-project(FRC)
-set(FRC_SOURCES main.cpp)
-set(FRC_INCLUDES ${WPILIB_INCLUDE_DIR})
-set(FRC_LIBS ${WPILIB_LIBRARY})
-add_vxworks_dkm(FRC_UserProgram ${FRC_SOURCES} ${FRC_INCLUDES} ${FRC_LIBS})
-
-
+#set necessary internal cmake flags
+set(CMAKE_C_COMPILE_OBJECT "<CMAKE_C_COMPILER> <DEFINES> -c <SOURCE> -o <OBJECT> <FLAGS> ${VXWORKS_COMPILE_FLAGS}")
+set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> -c <SOURCE> -o <OBJECT> <FLAGS> ${VXWORKS_COMPILE_FLAGS}")
+set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>" "<CMAKE_RANLIB> <TARGET>")
+set(CMAKE_CXX_CREATE_STATIC_LIBRARY "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>" "<CMAKE_RANLIB> <TARGET>")
+set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> ${VXWORKS_DKM_LINK_FLAGS} ${VXWORKS_DKM_LINK_SCRIPT_FLAG}")
+#link rules for C++: Here's where it gets crazy:
+#	- The first line compiles the partial image link - NOTE: we link static libraries at this point so that all of
+#		the symbols that are pulled into the module (and only those symbols) will be munched in the next step
+#	- The second line "munches" the executable to generate a file (<TARGET>_ctdt.c) that contains all of the
+#		static constructors and destructors in an array so that the kernel can call them at the appropriate times.
+#	- The third line compiles the ctor/dtor file.
+#	- The fourth line links the partial image together with the ctor/dtor object to create the finished executable
+#	- The fifth line makes the symbols from libstdcxx local so they don't conflict with symbols already in the kernel
+#	- The last line cleans up all these generated files (which will have to be regenerated later anyway)
+#
+#TODO:  This will NOT work on win32!
+set(CMAKE_CXX_LINK_EXECUTABLE 
+	"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> ${VXWORKS_DKM_LINK_FLAGS} <LINK_FLAGS> <OBJECTS> -o <TARGET>_PartialImage.out <LINK_LIBRARIES> ${VXWORKS_LIBSTDCXX}"
+	"${TOOLCHAIN_PREFIX}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
+	"<CMAKE_C_COMPILER> -c <TARGET>_ctdt.c -o <TARGET>_ctdt.c.o ${VXWORKS_COMPILE_FLAGS}"
+	"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <TARGET>_PartialImage.out <TARGET>_ctdt.c.o -o <TARGET>_syms.out ${VXWORKS_DKM_LINK_FLAGS} ${VXWORKS_DKM_LINK_SCRIPT_FLAG}"
+	"${TOOLCHAIN_PREFIX}/strip_syms.sh ${OBJCOPY_EXECUTABLE} ${NM_EXECUTABLE} <TARGET>_syms.out <TARGET> ${VXWORKS_LIBSTDCXX}"
+	"${CMAKE_COMMAND} -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o <TARGET>_syms.out"
+)
+set(CMAKE_LIBRARY_PATH_FLAG -L)
