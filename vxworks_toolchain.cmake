@@ -32,7 +32,7 @@ else()
 	### CONFIGURATION FOR NON-GCCDIST TOOLCHAINS ONLY ###
 	set(VXWORKS_LIBSTDCXX "${TOOLCHAIN_PREFIX}/lib/libstdc++.a")
 	set(VXWORKS_LIBSUPCXX "${TOOLCHAIN_PREFIX}/lib/libsupc++.a")
-	set(VXWORKS_LIBGCC /usr/local/lib/gcc/powerpc-wrs-vxworks/4.7.0/libgcc.a")
+	set(VXWORKS_LIBGCC "/usr/local/lib/gcc/powerpc-wrs-vxworks/4.7.0/libgcc.a")
 
 	#link flags for standard libraries
 	set(VXWORKS_STDLIB_LINK " -lsupc++ -lstdc++ -lgcc")
@@ -134,7 +134,7 @@ else()
 		"<CMAKE_C_COMPILER> -c <TARGET>_ctdt.c -o <TARGET>_ctdt.c.o ${VXWORKS_COMPILE_FLAGS}"
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <TARGET>_PartialImage.out <TARGET>_ctdt.c.o -o <TARGET>_syms.out ${VXWORKS_DKM_LINK_FLAGS} ${VXWORKS_DKM_LINK_SCRIPT_FLAG}"
 		"${TOOLCHAIN_PREFIX}/strip_syms.sh ${OBJCOPY_EXECUTABLE} ${NM_EXECUTABLE} <TARGET>_syms.out <TARGET> ${VXWORKS_LIBSTDCXX} ${VXWORKS_LIBSUPCXX} ${VXWORKS_LIBGCC}"
-		"${CMAKE_COMMAND} -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o <TARGET>_syms.out"
+#		"${CMAKE_COMMAND} -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o <TARGET>_syms.out"
 	)
 endif()
 set(CMAKE_LIBRARY_PATH_FLAG -L)
