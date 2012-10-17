@@ -24,10 +24,6 @@ set(CMAKE_FIND_ROOT_PATH "${TOOLCHAIN_PREFIX}")
 # Versioning Info
 set(GCC_VERSION 4.7.0)
 
-#location of WPILib - this should become a .config or a find module!
-set(WPILIB_LIBRARY "${TOOLCHAIN_PREFIX}/lib/libWPILib.a")
-set(WPILIB_INCLUDE_DIR "${TOOLCHAIN_PREFIX}/include/WPILib")
-
 ### TOOLCHAIN SPECIFIC CONFIGURATION ###
 if(${TOOLCHAIN_IS_GCCDIST})
 	### CONFIGURATION FOR GCCDIST ONLY ###
