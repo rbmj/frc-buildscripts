@@ -17,15 +17,6 @@ find_library(WPILib_LIBRARY
 	PATH_SUFFIXES ${WPILib_SUFFIXES}
 )
 
-# Manage Output
-if (WPILib_INCLUDE_DIR AND WPILib_LIBRARY)
-	set(WPILib_FOUND true)
-	set(WPILib_LIBRARIES ${WPILib_LIBRARY})
-else (WPILib_INCLUDE_DIR AND WPILib_LIBRARY)
-	set(WPILib_FOUND false)
-	set( WPILib_LIBRARIES )
-endif (WPILib_INCLUDE_DIR AND WPILib_LIBRARY)
-
 # Handle Args
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(WPILib DEFAULT_MSG WPILib_LIBRARY WPILib_INCLUDE_DIR)
