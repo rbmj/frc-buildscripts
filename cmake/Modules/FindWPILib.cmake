@@ -1,8 +1,8 @@
 # CMake Find Module for WPILib by Matt Coffin
-set(WPILib_FOUND 0)
 
 # Common attributes
 set(WPILib_SUFFIXES wpilib)
+set(WPILib_NAMES wpilib libwpilib)
 
 # Find includes
 find_path(WPILib_INCLUDE_DIR
@@ -11,7 +11,6 @@ find_path(WPILib_INCLUDE_DIR
 )
 
 # Library
-set(WPILib_NAMES wpilib libwpilib)
 find_library(WPILib_LIBRARY
 	NAMES ${WPILib_NAMES}
 	PATHS /usr/lib /usr/local/lib /usr/local/powerpc-wrs-vxworks/lib
