@@ -21,6 +21,9 @@ set(NM_EXECUTABLE powerpc-wrs-vxworks-nm)
 set(OBJCOPY_EXECUTABLE powerpc-wrs-vxworks-objcopy)
 set(CMAKE_FIND_ROOT_PATH "${TOOLCHAIN_PREFIX}")
 
+# Versioning Info
+set(GCC_VERSION 4.7.0)
+
 #location of WPILib - this should become a .config or a find module!
 set(WPILIB_LIBRARY "${TOOLCHAIN_PREFIX}/lib/libWPILib.a")
 set(WPILIB_INCLUDE_DIR "${TOOLCHAIN_PREFIX}/include/WPILib")
@@ -33,7 +36,7 @@ else()
 	### CONFIGURATION FOR NON-GCCDIST TOOLCHAINS ONLY ###
 	set(VXWORKS_LIBSTDCXX "${TOOLCHAIN_PREFIX}/lib/libstdc++.a")
 	set(VXWORKS_LIBSUPCXX "${TOOLCHAIN_PREFIX}/lib/libsupc++.a")
-	set(VXWORKS_LIBGCC "/usr/local/lib/gcc/powerpc-wrs-vxworks/4.6.3/libgcc.a")
+	set(VXWORKS_LIBGCC /usr/local/lib/gcc/powerpc-wrs-vxworks/4.7.0/libgcc.a")
 
 	#link flags for standard libraries
 	set(VXWORKS_STDLIB_LINK " -lsupc++ -lstdc++ -lgcc")
