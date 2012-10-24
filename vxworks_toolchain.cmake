@@ -108,7 +108,7 @@ if(${TOOLCHAIN_IS_GCCDIST})
 #	NOTE: We don't link the standard library here as we'll get the kernel's copy when we get loaded in
 	set(CMAKE_CXX_LINK_EXECUTABLE
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> ${VXWORKS_DKM_LINK_FLAGS} <LINK_FLAGS> <OBJECTS> -o <TARGET>_PartialImage.out <LINK_LIBRARIES>"
-		"${TOOLCHAIN_PREFIX}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
+		"${WIND_BASE}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
 		"<CMAKE_C_COMPILER> -c <TARGET>_ctdt.c -o <TARGET>_ctdt.c.o ${VXWORKS_COMPILE_FLAGS}"
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <TARGET>_PartialImage.out <TARGET>_ctdt.c.o -o <TARGET> ${VXWORKS_DKM_LINK_FLAGS} ${VXWORKS_DKM_LINK_SCRIPT_FLAG}"
 		"<CMAKE_COMMAND> -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o"
@@ -130,10 +130,10 @@ else()
 #		command might work, but I don't recommend it.
 	set(CMAKE_CXX_LINK_EXECUTABLE 
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> ${VXWORKS_DKM_LINK_FLAGS} <LINK_FLAGS> <OBJECTS> -o <TARGET>_PartialImage.out <LINK_LIBRARIES> ${VXWORKS_STDLIB_LINK}"
-		"${TOOLCHAIN_PREFIX}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
+		"${WIND_BASE}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
 		"<CMAKE_C_COMPILER> -c <TARGET>_ctdt.c -o <TARGET>_ctdt.c.o ${VXWORKS_COMPILE_FLAGS}"
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <TARGET>_PartialImage.out <TARGET>_ctdt.c.o -o <TARGET>_syms.out ${VXWORKS_DKM_LINK_FLAGS} ${VXWORKS_DKM_LINK_SCRIPT_FLAG}"
-		"${TOOLCHAIN_PREFIX}/strip_syms.sh ${OBJCOPY_EXECUTABLE} ${NM_EXECUTABLE} <TARGET>_syms.out <TARGET> ${VXWORKS_LIBSTDCXX} ${VXWORKS_LIBSUPCXX} ${VXWORKS_LIBGCC}"
+		"${WIND_BASE}/strip_syms.sh ${OBJCOPY_EXECUTABLE} ${NM_EXECUTABLE} <TARGET>_syms.out <TARGET> ${VXWORKS_LIBSTDCXX} ${VXWORKS_LIBSUPCXX} ${VXWORKS_LIBGCC}"
 		"<CMAKE_COMMAND> -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o <TARGET>_syms.out"
 	)
 endif()
