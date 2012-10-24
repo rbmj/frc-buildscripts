@@ -32,7 +32,7 @@ else()
 	### CONFIGURATION FOR NON-GCCDIST TOOLCHAINS ONLY ###
 	set(VXWORKS_LIBSTDCXX "${TOOLCHAIN_PREFIX}/lib/libstdc++.a")
 	set(VXWORKS_LIBSUPCXX "${TOOLCHAIN_PREFIX}/lib/libsupc++.a")
-	set(VXWORKS_LIBGCC "/usr/local/lib/gcc/powerpc-wrs-vxworks/4.7.0/libgcc.a")
+	set(VXWORKS_LIBGCC "/usr/local/lib/gcc/powerpc-wrs-vxworks/${GCC_VERSION}/libgcc.a")
 
 	#link flags for standard libraries
 	set(VXWORKS_STDLIB_LINK " -lsupc++ -lstdc++ -lgcc")
