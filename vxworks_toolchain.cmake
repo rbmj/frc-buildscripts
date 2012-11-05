@@ -21,9 +21,8 @@ set(NM_EXECUTABLE powerpc-wrs-vxworks-nm)
 set(OBJCOPY_EXECUTABLE powerpc-wrs-vxworks-objcopy)
 set(CMAKE_FIND_ROOT_PATH "${TOOLCHAIN_PREFIX}")
 
-#location of WPILib - this should become a .config or a find module!
-set(WPILIB_LIBRARY "${TOOLCHAIN_PREFIX}/lib/libWPILib.a")
-set(WPILIB_INCLUDE_DIR "${TOOLCHAIN_PREFIX}/include/WPILib")
+# Versioning Info
+set(GCC_VERSION 4.7.2)
 
 ### TOOLCHAIN SPECIFIC CONFIGURATION ###
 if(${TOOLCHAIN_IS_GCCDIST})
@@ -33,7 +32,7 @@ else()
 	### CONFIGURATION FOR NON-GCCDIST TOOLCHAINS ONLY ###
 	set(VXWORKS_LIBSTDCXX "${TOOLCHAIN_PREFIX}/lib/libstdc++.a")
 	set(VXWORKS_LIBSUPCXX "${TOOLCHAIN_PREFIX}/lib/libsupc++.a")
-	set(VXWORKS_LIBGCC "/usr/local/lib/gcc/powerpc-wrs-vxworks/4.6.3/libgcc.a")
+	set(VXWORKS_LIBGCC "/usr/local/lib/gcc/powerpc-wrs-vxworks/${GCC_VERSION}/libgcc.a")
 
 	#link flags for standard libraries
 	set(VXWORKS_STDLIB_LINK " -lsupc++ -lstdc++ -lgcc")
@@ -109,10 +108,10 @@ if(${TOOLCHAIN_IS_GCCDIST})
 #	NOTE: We don't link the standard library here as we'll get the kernel's copy when we get loaded in
 	set(CMAKE_CXX_LINK_EXECUTABLE
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> ${VXWORKS_DKM_LINK_FLAGS} <LINK_FLAGS> <OBJECTS> -o <TARGET>_PartialImage.out <LINK_LIBRARIES>"
-		"${TOOLCHAIN_PREFIX}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
+		"${WIND_BASE}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
 		"<CMAKE_C_COMPILER> -c <TARGET>_ctdt.c -o <TARGET>_ctdt.c.o ${VXWORKS_COMPILE_FLAGS}"
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <TARGET>_PartialImage.out <TARGET>_ctdt.c.o -o <TARGET> ${VXWORKS_DKM_LINK_FLAGS} ${VXWORKS_DKM_LINK_SCRIPT_FLAG}"
-		"${CMAKE_COMMAND} -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o"
+		"<CMAKE_COMMAND> -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o"
 	)
 else()
 #	Here's the crazy part...
@@ -131,11 +130,11 @@ else()
 #		command might work, but I don't recommend it.
 	set(CMAKE_CXX_LINK_EXECUTABLE 
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> ${VXWORKS_DKM_LINK_FLAGS} <LINK_FLAGS> <OBJECTS> -o <TARGET>_PartialImage.out <LINK_LIBRARIES> ${VXWORKS_STDLIB_LINK}"
-		"${TOOLCHAIN_PREFIX}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
+		"${WIND_BASE}/munch.sh ${NM_EXECUTABLE} <TARGET>_ctdt.c <TARGET>_PartialImage.out"
 		"<CMAKE_C_COMPILER> -c <TARGET>_ctdt.c -o <TARGET>_ctdt.c.o ${VXWORKS_COMPILE_FLAGS}"
 		"<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <TARGET>_PartialImage.out <TARGET>_ctdt.c.o -o <TARGET>_syms.out ${VXWORKS_DKM_LINK_FLAGS} ${VXWORKS_DKM_LINK_SCRIPT_FLAG}"
-		"${TOOLCHAIN_PREFIX}/strip_syms.sh ${OBJCOPY_EXECUTABLE} ${NM_EXECUTABLE} <TARGET>_syms.out <TARGET> ${VXWORKS_LIBSTDCXX} ${VXWORKS_LIBSUPCXX} ${VXWORKS_LIBGCC}"
-		"${CMAKE_COMMAND} -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o <TARGET>_syms.out"
+		"${WIND_BASE}/strip_syms.sh ${OBJCOPY_EXECUTABLE} ${NM_EXECUTABLE} <TARGET>_syms.out <TARGET> ${VXWORKS_LIBSTDCXX} ${VXWORKS_LIBSUPCXX} ${VXWORKS_LIBGCC}"
+		"<CMAKE_COMMAND> -E remove <TARGET>_PartialImage.out <TARGET>_ctdt.c <TARGET>_ctdt.c.o <TARGET>_syms.out"
 	)
 endif()
 set(CMAKE_LIBRARY_PATH_FLAG -L)
