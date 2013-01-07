@@ -1,0 +1,5 @@
+powerpc-wrs-vxworks-buildscripts (1.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Robert Blair Mason Jr. <rbmj@verizon.net>  Fri, 11 May 2012 19:28:51 -0400
