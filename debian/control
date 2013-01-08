@@ -4,9 +4,9 @@ Priority: extra
 Maintainer: Robert Blair Mason Jr. <rbmj@verizon.net>
 Build-Depends: debhelper (>= 8.0.0), cmake (>= 2.8.0)
 Standards-Version: 3.9.2
-Homepage: http://github.com/rbmj/vxworks-build-helper
-Vcs-Git: git://github.com/rbmj/vxworks-build-helper
-Vcs-Browser: http://github.com/rbmj/vxworks-build-helper
+Homepage: http://github.com/rbmj/powerpc-wrs-vxworks-buildscripts
+Vcs-Git: git://github.com/rbmj/powerpc-wrs-vxworks-buildscripts
+Vcs-Browser: http://github.com/rbmj/powerpc-wrs-vxworks-buildscripts
 
 Package: powerpc-wrs-vxworks-buildscripts
 Architecture: all
@@ -15,7 +15,7 @@ Recommends: powerpc-wrs-vxworks-gcc, cmake (>= 2.8.0)
 Description: Scripts to assist builds targeting VxWorks
  These are some simple scripts that are used to help builds targeting
  VxWorks.  The primary reason these scripts exist is to wrap some of
- the build functionality into a seperate tool instead of the build
+ the build functionality into a separate tool instead of the build
  script itself.  It also provides a cmake toolchain file in
  /usr/powerpc-wrs-vxworks/share/cmake/toolchain.cmake and a cmake
  "platform" FRC for convenience when using these scripts for FIRST
