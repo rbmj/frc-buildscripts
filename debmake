@@ -23,10 +23,17 @@ unset TMP
 BUILDDIR="$PDIR/build"
 NEWSRCDIR="$BUILDDIR/$PKGNAME"
 
-if [ ! -d "$NEWSRCDIR" ] ; then
-    mkdir -p "$NEWSRCDIR" #will also create BUILDDIR if necessary
+if [ -d "$BUILDDIR" ] ; then
+    rm -rf "$BUILDDIR" #debian wants to do a completely clean build anyway
+    #maybe should do some checking to see if we actually need to regen
+    #everything, but for this package it doesn't take that much time anyway
 fi
 
+mkdir -p "$NEWSRCDIR" #will also create BUILDDIR if necessary
+
+#perhaps I should do something here that would include changes in the working
+#copy as opposed to only the last commit, but not necessary now.  I guess
+#workflow for now is use git commit --amend and not worry about it.
 git archive master | tar -x -C "$NEWSRCDIR"
 
 cd "$BUILDDIR"
