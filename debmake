@@ -1,0 +1,38 @@
+#!/bin/sh
+
+if [ ! -d .git ] ; then
+    echo This script only works with git repos >&2
+    exit 1
+fi
+
+PDIR=$(dirname `pwd`)
+
+PKGNAME=$(basename `pwd`)
+VERSION_FULL=`dpkg-parsechangelog -c1 | grep Version | cut "-d " -f 2`
+TMP="echo $VERSION_FULL | tr '-' '\\n'"
+if [ "`eval $TMP | wc -l`" = "1" ] ; then
+    REVISION=""
+    VERSION=$VERSION_FULL
+else
+    REVISION=`eval $TMP | tail -1`
+    VERSION=`eval $TMP | head -n -1 | tr '\n' '-'`
+    VERSION=${VERSION%?} # get rid of extra dash at end
+fi
+unset TMP
+
+BUILDDIR="$PDIR/build"
+NEWSRCDIR="$BUILDDIR/$PKGNAME"
+
+if [ ! -d "$NEWSRCDIR" ] ; then
+    mkdir -p "$NEWSRCDIR" #will also create BUILDDIR if necessary
+fi
+
+git archive master | tar -x -C "$NEWSRCDIR"
+
+cd "$BUILDDIR"
+tar -cf "${PKGNAME}_$VERSION.orig.tar" `basename "$NEWSRCDIR"`
+gzip "${PKGNAME}_$VERSION.orig.tar"
+
+cd "$NEWSRCDIR"
+debuild
+
