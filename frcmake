@@ -1,0 +1,8 @@
+#!/bin/sh
+
+CMAKE="cmake"
+TOOLCHAIN_ROOT="/usr/powerpc-wrs-vxworks"
+TOOLCHAIN_FILE="$TOOLCHAIN_ROOT/share/cmake/toolchain.cmake"
+
+exec "$CMAKE" "-DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE" "$@"
+
