@@ -12,6 +12,7 @@ include(CMakeForceCompiler)
 set(TOOLCHAIN_PREFIX /usr/powerpc-wrs-vxworks)
 set(TOOLCHAIN_IS_GCCDIST false)
 set(TOOLCHAIN_C_COMPILER powerpc-wrs-vxworks-gcc)
+set(TOOLCHAIN_CXX_COMPILER powerpc-wrs-vxworks-g++)
 
 set(STRIPSYMS powerpc-wrs-vxworks-stripsyms) #ignore for gccdist
 set(MUNCH powerpc-wrs-vxworks-munch) #see README
@@ -24,6 +25,7 @@ set(CMAKE_FIND_ROOT_PATH "${TOOLCHAIN_PREFIX}")
 set(VXWORKS_USE_SOFT_FLOAT false)
 
 CMAKE_FORCE_C_COMPILER("${TOOLCHAIN_C_COMPILER}" GNU)
+CMAKE_FORCE_CXX_COMPILER("${TOOLCHAIN_CXX_COMPILER}" GNU)
 set(CMAKE_LIBRARY_PATH_FLAG -L)
 
 ### TOOLCHAIN SPECIFIC CONFIGURATION ###
