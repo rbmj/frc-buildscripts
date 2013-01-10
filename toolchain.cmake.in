@@ -36,7 +36,7 @@ else()
 	### CONFIGURATION FOR NON-GCCDIST TOOLCHAINS ONLY ###
 	set(VXWORKS_LIBSTDCXX "${TOOLCHAIN_PREFIX}/lib/libstdc++.a")
 	set(VXWORKS_LIBSUPCXX "${TOOLCHAIN_PREFIX}/lib/libsupc++.a")
-	execute_process(COMMAND gcc -print-libgcc-file-name OUTPUT_VARIABLE VXWORKS_LIBGCC)
+    execute_process(COMMAND "${TOOLCHAIN_C_COMPILER}" -print-libgcc-file-name OUTPUT_VARIABLE VXWORKS_LIBGCC)
 
 	#link flags for standard libraries
 	set(VXWORKS_STDLIB_LINK " -lsupc++ -lstdc++ -lgcc")
