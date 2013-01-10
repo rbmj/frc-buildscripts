@@ -34,10 +34,18 @@ if(${TOOLCHAIN_IS_GCCDIST})
 	#nothing right now
 else()
 	### CONFIGURATION FOR NON-GCCDIST TOOLCHAINS ONLY ###
+	#locations of libraries so we can use nm to find their symbols
 	set(VXWORKS_LIBSTDCXX "${TOOLCHAIN_PREFIX}/lib/libstdc++.a")
 	set(VXWORKS_LIBSUPCXX "${TOOLCHAIN_PREFIX}/lib/libsupc++.a")
+	#libgcc's location changes based on gcc, so ask compiler where it is
     execute_process(COMMAND "${TOOLCHAIN_C_COMPILER}" -print-libgcc-file-name OUTPUT_VARIABLE VXWORKS_LIBGCC)
-
+    
+    #the above command leaves a newline at the end of VXWORKS_LIBGCC.
+    #This triggers a bug in cmake's link script execution which will
+    #segfault because it sees a blank line and passes an empty string to
+    #execvp().  For now, workaround: use regex to strip trailing newline
+	string(REGEX REPLACE "(\r?\n)+$" "" VXWORKS_LIBGCC "${VXWORKS_LIBGCC}")
+	
 	#link flags for standard libraries
 	set(VXWORKS_STDLIB_LINK " -lsupc++ -lstdc++ -lgcc")
 	#TODO: Do we want libsupc++?
