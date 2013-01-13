@@ -31,7 +31,7 @@ set(CMAKE_LIBRARY_PATH_FLAG -L)
 ### TOOLCHAIN SPECIFIC CONFIGURATION ###
 if(${TOOLCHAIN_IS_GCCDIST})
 	### CONFIGURATION FOR GCCDIST ONLY ###
-	#nothing right now
+    set(DKM_LINK_SCRIPT "${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
 else()
 	### CONFIGURATION FOR NON-GCCDIST TOOLCHAINS ONLY ###
 	#locations of libraries so we can use nm to find their symbols
@@ -49,6 +49,8 @@ else()
 	#link flags for standard libraries
 	set(VXWORKS_STDLIB_LINK " -lsupc++ -lstdc++ -lgcc")
 	#TODO: Do we want libsupc++?
+
+    set(DKM_LINK_SCRIPT "${TOOLCHAIN_PREFIX}/share/ldscripts/dkm.ld")
 endif()
 ### END TOOLCHAIN SPECIFIC CONFIGURATION ###
 
@@ -92,13 +94,7 @@ endif()
 #Note that we use -nostdlib and then link with the standard library
 set(VXWORKS_COMPILE_FLAGS "${ARCH_SPEC} -nostdlib -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
 set(VXWORKS_DKM_LINK_FLAGS "-nostdlib -r -Wl,-X -static") #should be equivalent to -nostdlib -Wl,-X,-r -static but I don't want to mess...
-set(VXWORKS_DKM_LINK_SCRIPT_FLAG "-T ${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
-
-#Set CFLAGS, LDFLAGS
-#Note that we use -nostdlib and then link with the standard library
-set(VXWORKS_COMPILE_FLAGS " ${ARCH_SPEC} -nostdlib -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
-set(VXWORKS_DKM_LINK_FLAGS "-nostdlib -r -Wl,-X -static") #should be equivalent to -nostdlib -Wl,-X,-r -static but I don't want to mess...
-set(VXWORKS_DKM_LINK_SCRIPT_FLAG "-T ${WIND_BASE}/target/h/tool/gnu/ldscripts/link.OUT")
+set(VXWORKS_DKM_LINK_SCRIPT_FLAG "-T \"${DKM_LINK_SCRIPT}\"")
 
 #Set toolchain definitions
 set(CMAKE_C_COMPILE_OBJECT "<CMAKE_C_COMPILER> <DEFINES> -c <SOURCE> -o <OBJECT> <FLAGS> ${VXWORKS_COMPILE_FLAGS}")
