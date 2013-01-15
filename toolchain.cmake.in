@@ -92,7 +92,7 @@ endif()
 
 #Set CFLAGS, LDFLAGS
 #Note that we use -nostdlib and then link with the standard library
-set(VXWORKS_COMPILE_FLAGS "${ARCH_SPEC} -nostdlib -ansi -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
+set(VXWORKS_COMPILE_FLAGS "${ARCH_SPEC} -nostdlib -Wall ${SYSTEM_INCLUDES} -DCPU=${CPU} -DTOOL_FAMILY=${TOOL_FAMILY} -DTOOL=${TOOL} -D_WRS_KERNEL")
 set(VXWORKS_DKM_LINK_FLAGS "-nostdlib -r -Wl,-X -static") #should be equivalent to -nostdlib -Wl,-X,-r -static but I don't want to mess...
 set(VXWORKS_DKM_LINK_SCRIPT_FLAG "-T \"${DKM_LINK_SCRIPT}\"")
 
