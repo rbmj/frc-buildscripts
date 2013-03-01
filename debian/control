@@ -1,4 +1,4 @@
-Source: powerpc-wrs-vxworks-buildscripts
+Source: frc-buildscripts
 Section: devel
 Priority: extra
 Maintainer: Robert Blair Mason Jr. <rbmj@verizon.net>
@@ -8,7 +8,7 @@ Homepage: http://github.com/rbmj/powerpc-wrs-vxworks-buildscripts
 Vcs-Git: git://github.com/rbmj/powerpc-wrs-vxworks-buildscripts
 Vcs-Browser: http://github.com/rbmj/powerpc-wrs-vxworks-buildscripts
 
-Package: powerpc-wrs-vxworks-buildscripts
+Package: frc-buildscripts
 Architecture: all
 Depends: ${misc:Depends}, wrs-headers-installer, powerpc-wrs-vxworks-binutils
 Recommends: powerpc-wrs-vxworks-gcc, cmake (>= 2.8.0)
