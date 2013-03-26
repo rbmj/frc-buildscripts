@@ -10,8 +10,8 @@ Vcs-Browser: http://github.com/rbmj/powerpc-wrs-vxworks-buildscripts
 
 Package: frc-buildscripts
 Architecture: all
-Depends: ${misc:Depends}, powerpc-wrs-vxworks-binutils, tclsh, wput
-Recommends: powerpc-wrs-vxworks-gcc, cmake (>= 2.8.0)
+Depends: ${misc:Depends}, binutils-powerpc-wrs-vxworks, tclsh, wput
+Recommends: gcc-powerpc-wrs-vxworks, cmake (>= 2.8.0)
 Description: Scripts to assist builds targeting VxWorks
  These are some simple scripts that are used to help builds targeting
  VxWorks.  The primary reason these scripts exist is to wrap some of
