@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 2.8)
 project(powerpc-wrs-vxworks-buildscripts)
 
+#to do a cross build for windows, override with:
+# CMAKE_DIR=/cmake/share/cmake-2.8
+# CMAKE_INSTALL_PREFIX=/mingw
+# TOOL_ROOT=/mingw/powerpc-wrs-vxworks
+
 set(CMAKE_INSTALL_PREFIX /usr)
 set(TOOL_ROOT /usr/powerpc-wrs-vxworks)
 set(CMAKE_TOOL_DIR ${TOOL_ROOT}/share/cmake)
+set(CMAKE_DIR ${CMAKE_ROOT})
 
 #generate a toolchain file for the mythical "FRC" system
 #so that the user can say set(CMAKE_SYSTEM_NAME FRC) to include it
@@ -43,7 +49,7 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEANFILES}")
 add_custom_target(CMAKE_TOOLCHAIN ALL DEPENDS ${TOOLCHAIN}) # ${FRC})
 
 #install(FILES "${FRC}" DESTINATION "${CMAKE_ROOT}/Modules/Platform")
-install(FILES "${DEPLOY_MACRO_FILE}" DESTINATION "${CMAKE_ROOT}/Modules")
+install(FILES "${DEPLOY_MACRO_FILE}" DESTINATION "${CMAKE_DIR}/Modules")
 install(FILES "${TOOLCHAIN}" DESTINATION "${CMAKE_TOOL_DIR}")
 install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/powerpc-wrs-vxworks-munch" DESTINATION bin)
 install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/powerpc-wrs-vxworks-stripsyms" DESTINATION bin)

@@ -9,10 +9,26 @@ include(CMakeForceCompiler)
 
 ### CONFIGURATION ###
 
-set(TOOLCHAIN_PREFIX /usr/powerpc-wrs-vxworks)
-set(TOOLCHAIN_IS_GCCDIST false)
-set(TOOLCHAIN_C_COMPILER powerpc-wrs-vxworks-gcc)
-set(TOOLCHAIN_CXX_COMPILER powerpc-wrs-vxworks-g++)
+if (${WIN32})
+    GET_FILENAME_COMPONENT(WIN_INSTALLDIR
+        "[HKEY_LOCAL_MACHINE\\Software\\FIRST\\FRCToolchain;INSTALLDIR]"
+        ABSOLUTE CACHE)
+    if (${WIN_INSTALLDIR})
+        set(TOOL_INST_DIR "${WIN_INSTALLDIR}\\mingw")
+        set(TOOLCHAIN_PREFIX "${TOOL_INST_DIR}\\powerpc-wrs-vxworks")
+        set(TOOLCHAIN_C_COMPILER powerpc-wrs-vxworks-gcc)
+        set(TOOLCHAIN_CXX_COMPILER powerpc-wrs-vxworks-g++)
+        set(TOOLCHAIN_IS_GCCDIST false)
+    else()
+        message(FATAL_ERROR "Your configuration is not supported")
+    endif()
+else()
+    # Assume usual configuration
+    set(TOOLCHAIN_PREFIX /usr/powerpc-wrs-vxworks)
+    set(TOOLCHAIN_IS_GCCDIST false)
+    set(TOOLCHAIN_C_COMPILER powerpc-wrs-vxworks-gcc)
+    set(TOOLCHAIN_CXX_COMPILER powerpc-wrs-vxworks-g++)
+endif()
 
 set(STRIPSYMS powerpc-wrs-vxworks-stripsyms) #ignore for gccdist
 set(MUNCH powerpc-wrs-vxworks-munch) #see README
