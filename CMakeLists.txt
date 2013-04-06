@@ -1,15 +1,27 @@
 cmake_minimum_required(VERSION 2.8)
 project(powerpc-wrs-vxworks-buildscripts)
 
-#to do a cross build for windows, override with:
-# CMAKE_DIR=/cmake/share/cmake-2.8
-# CMAKE_INSTALL_PREFIX=/mingw
-# TOOL_ROOT=/mingw/powerpc-wrs-vxworks
+#no need to type this out over and over again
+set(SRCDIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(CMAKE_INSTALL_PREFIX /usr)
-set(TOOL_ROOT /usr/powerpc-wrs-vxworks)
+#activate the windows section with a -D flag
+if (${CROSS_BUILD_WINDOWS})
+    set(CMAKE_DIR /cmake/share/cmake-2.8)
+    set(CMAKE_INSTALL_PREFIX /mingw)
+    set(TOOL_ROOT /mingw/powerpc-wrs-vxworks)
+    set(MUNCH_SH "${SRCDIR}/powerpc-wrs-vxworks-munch.bat")
+    set(STRIP_SH "${SRCDIR}/powerpc-wrs-vxworks-stripsyms.bat")
+    set(FRCMAKE_SH "${SRCDIR}/frcmake.bat")
+else()
+    set(CMAKE_INSTALL_PREFIX /usr)
+    set(TOOL_ROOT /usr/powerpc-wrs-vxworks)
+    set(CMAKE_DIR ${CMAKE_ROOT})
+    set(MUNCH_SH "${SRCDIR}/powerpc-wrs-vxworks-munch")
+    set(STRIP_SH "${SRCDIR}/powerpc-wrs-vxworks-stripsyms")
+    set(FRCMAKE_SH "${SRCDIR}/frcmake")
+endif()
+
 set(CMAKE_TOOL_DIR ${TOOL_ROOT}/share/cmake)
-set(CMAKE_DIR ${CMAKE_ROOT})
 
 #generate a toolchain file for the mythical "FRC" system
 #so that the user can say set(CMAKE_SYSTEM_NAME FRC) to include it
@@ -22,7 +34,7 @@ set(CMAKE_DIR ${CMAKE_ROOT})
 #set(PLATFORM_VERSION_DECLARATION "set(CMAKE_SYSTEM_VERSION 1)")
 #set(PLATFORM_PROCESSOR_DECLARATION "set(CMAKE_SYSTEM_PROFESSOR PPC)")
 
-set(DEPLOY_MACRO_FILE "${CMAKE_CURRENT_SOURCE_DIR}/FRCDeploy.cmake")
+set(DEPLOY_MACRO_FILE "${SRCDIR}/FRCDeploy.cmake")
 #set(FRC_IN "${CMAKE_CURRENT_BINARY_DIR}/FRC.cmake.in")
 #set(FRC "${CMAKE_CURRENT_BINARY_DIR}/FRC.cmake")
 
@@ -35,11 +47,12 @@ set(DEPLOY_MACRO_FILE "${CMAKE_CURRENT_SOURCE_DIR}/FRCDeploy.cmake")
 #this will be a toolchain to be explicitly included
 #not putting this in as an official cross toolchain as it's too
 #application specific, but it can be included explicitly
+#using Generic in order to kill spurrious "we don't know this system" warns
 set(PLATFORM_NAME_DECLARATION "set(CMAKE_SYSTEM_NAME Generic)") #VxWorks
-set(PLATFORM_VERSION_DECLARATION "") #vxworks 6?
+set(PLATFORM_VERSION_DECLARATION "") #vxworks 6.3?
 set(PLATFORM_PROCESSOR_DECLARATION "set(CMAKE_SYSTEM_PROCESSOR PPC)")
 
-set(TOOLCHAIN_IN "${CMAKE_CURRENT_SOURCE_DIR}/toolchain.cmake.in")
+set(TOOLCHAIN_IN "${SRCDIR}/toolchain.cmake.in")
 set(TOOLCHAIN "${CMAKE_CURRENT_BINARY_DIR}/toolchain.cmake")
 configure_file("${TOOLCHAIN_IN}" "${TOOLCHAIN}" @ONLY)
 
@@ -51,7 +64,7 @@ add_custom_target(CMAKE_TOOLCHAIN ALL DEPENDS ${TOOLCHAIN}) # ${FRC})
 #install(FILES "${FRC}" DESTINATION "${CMAKE_ROOT}/Modules/Platform")
 install(FILES "${DEPLOY_MACRO_FILE}" DESTINATION "${CMAKE_DIR}/Modules")
 install(FILES "${TOOLCHAIN}" DESTINATION "${CMAKE_TOOL_DIR}")
-install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/powerpc-wrs-vxworks-munch" DESTINATION bin)
-install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/powerpc-wrs-vxworks-stripsyms" DESTINATION bin)
-install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/frcmake" DESTINATION bin)
+install(PROGRAMS "${MUNCH_SH}" DESTINATION bin)
+install(PROGRAMS "${STRIP_SH}" DESTINATION bin)
+install(PROGRAMS "${FRCMAKE_SH}" DESTINATION bin)
 
