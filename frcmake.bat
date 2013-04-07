@@ -1,10 +1,10 @@
 @echo off
 
-SCRIPT_DIR=%~dp0
+SET SCRIPT_DIR=%~dp0
 
-CMAKE=%SCRIPT_DIR%\..\..\cmake\bin\cmake.exe
-TOOLCHAIN_ROOT=%SCRIPT_DIR%\..\powerpc-wrs-vxworks
-TOOLCHAIN_FILE=%TOOLCHAIN_ROOT%\share\cmake\toolchain.cmake
+SET CMAKE=%SCRIPT_DIR%\..\..\cmake\bin\cmake.exe
+SET TOOLCHAIN_ROOT=%SCRIPT_DIR%\..\powerpc-wrs-vxworks
+SET TOOLCHAIN_FILE=%TOOLCHAIN_ROOT%\share\cmake\toolchain.cmake
 
-%CMAKE% -DCMAKE_TOOLCHAIN_FILE=%TOOLCHAIN_FILE% -DCMAKE_INSTALL_PREFIX=%TOOLCHAIN_ROOT% %*
+%CMAKE% -DCMAKE_TOOLCHAIN_FILE=%TOOLCHAIN_FILE% -DCMAKE_INSTALL_PREFIX=%TOOLCHAIN_ROOT% -G "MinGW Makefiles" %*
 

@@ -16,8 +16,7 @@ set ARGS_REST=%ARGS_REST% %0
 goto next
 :end
 
-FOR /F "usebackq tokens=3 delims= " %%s IN (`powerpc-wrs-vxworks-nm %ARGS_REST%`) DO echo %%s | sed "/^$/d" > %SYMFILE%
+powerpc-wrs-vxworks-echosyms %ARGS_REST% | sed "/^$/d" > %SYMFILE%
 
-powerpc-wrs-vxworks-objcopy --localize-symbols=%SYMFILE%
+powerpc-wrs-vxworks-objcopy --localize-symbols=%SYMFILE% %OBJ%
 del %SYMFILE%
-
