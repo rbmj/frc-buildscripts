@@ -16,5 +16,5 @@ set ARGS_REST=%ARGS_REST% %0
 goto next
 :end
 
-powerpc-wrs-vxworks-nm %ARGS_REST% | tclsh %TCL_SCRIPT% -c ppc | sed "s/extern void\(.*\);/extern void \1 __attribute__((externally_visible));/" > %OUTPUT_FILE%
+powerpc-wrs-vxworks-nm %ARGS_REST% | tclsh "%TCL_SCRIPT%" -c ppc | sed "s/extern void\(.*\);/extern void \1 __attribute__((externally_visible));/" > "%OUTPUT_FILE%"
 
