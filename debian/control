@@ -1,7 +1,7 @@
 Source: frc-buildscripts
 Section: devel
 Priority: extra
-Maintainer: Robert Blair Mason Jr. <rbmj@verizon.net>
+Maintainer: R Blair Mason (rbmj) <rbmj@verizon.net>
 Build-Depends: debhelper (>= 8.0.0), cmake (>= 2.8.0)
 Standards-Version: 3.9.2
 Homepage: http://github.com/rbmj/powerpc-wrs-vxworks-buildscripts
